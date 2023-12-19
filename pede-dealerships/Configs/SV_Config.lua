@@ -1,0 +1,3 @@
+SVConfig = {}
+
+SVConfig.webhookURL = ""
