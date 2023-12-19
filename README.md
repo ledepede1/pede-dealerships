@@ -36,7 +36,4 @@ helt igennem så fejl kan godt forekomme.
 > Mulighed for at tage en bil fra sit lager ud til testkørsel
 **Har helt sikkert glemt noget i er velkommne til at stille spørgsmål og give feedback!**
 
-Download:
-Showcase:
-
 
