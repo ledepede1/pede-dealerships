@@ -6,9 +6,10 @@ function OpenDealerMenu(name, jobName, category, spawncoords, spawnheading, test
         if closestPlayer ~= -1 or closestPlayerDistance < 3.0 then
             ESX.TriggerServerCallback('pede:getPlayerName', function(returnedName)
                 playerName = returnedName
+        end, GetPlayerServerId(closestPlayer))
 
-
-
+        Citizen.Wait(100)
+        
         lib.registerContext({
           id = 'cardealer_main_menu',
           title = Config.Menus.mainmenu.title,
@@ -69,7 +70,6 @@ function OpenDealerMenu(name, jobName, category, spawncoords, spawnheading, test
           }
         })
             lib.showContext('cardealer_main_menu')
-        end, GetPlayerServerId(closestPlayer))
     end
 end
 

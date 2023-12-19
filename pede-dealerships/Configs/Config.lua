@@ -53,7 +53,7 @@ Config.Dealerships = {
         }
     },
 
-    --[[["Sanders MC"] = {
+    ["Sanders MC"] = {
         CompanyLabel = "Sanders MC Forhandler", -- Label on the cardealer
         jobName = "cardealer", -- Jobname of the dealer
 
@@ -84,7 +84,7 @@ Config.Dealerships = {
             [1] = { target = vector3(-50.7351,-1091.6746,26.4223), spawnPos = vector3(-39.7972,-1102.7212,26.4223) },
             [2] = { target = vector3(-46.2481,-1104.4904,26.4223), spawnPos = vector3(-47.3,-1093.6865,26.4223) },
         }
-    },--]]
+    },
 }
 
 Config.Menus = {
