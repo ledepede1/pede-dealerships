@@ -6,7 +6,7 @@ function OpenSellMenu(jobName, spawncoords, spawnheading)
     local closestPlayer, closestPlayerDistance = ESX.Game.GetClosestPlayer()
     local stockWorth = GetStockWorth(jobName)
 
-        if closestPlayer ~= -1 or closestPlayerDistance < 3.0 then
+        if closestPlayer ~= -1 and closestPlayerDistance < 3.0 then
             ESX.TriggerServerCallback('pede:getPlayerName', function(returnedName)
                 nearestPlayerName = returnedName
             end, GetPlayerServerId(closestPlayer))
@@ -20,7 +20,7 @@ function OpenSellMenu(jobName, spawncoords, spawnheading)
                 onSelect = function ()
                     local closestPlayer, closestPlayerDistance = ESX.Game.GetClosestPlayer()
 
-                if closestPlayer == -1 or closestPlayerDistance > 3.0 then 
+                if closestPlayer == -1 or closestPlayerDistance >= 3.0 then 
                     lib.notify({
                         title = Locales[Lang].notifications.title,
                         description = Locales[Lang].notifications.noPlayersnearby,

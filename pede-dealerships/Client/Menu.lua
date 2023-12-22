@@ -3,74 +3,77 @@ function OpenDealerMenu(name, jobName, category, spawncoords, spawnheading, test
     local playerName = Locales[Lang].noPlayersNearby
     local stockWorth = GetStockWorth(jobName)
 
-        if closestPlayer ~= -1 or closestPlayerDistance < 3.0 then
-            ESX.TriggerServerCallback('pede:getPlayerName', function(returnedName)
-                playerName = returnedName
+    if closestPlayer ~= -1 and closestPlayerDistance < 3.0 then
+        ESX.TriggerServerCallback('pede:getPlayerName', function(returnedName)
+            playerName = returnedName
+            OpenDealerMenuFinal(name, jobName, category, spawncoords, spawnheading, testcarcoords, testcarheading, playerName, stockWorth)
         end, GetPlayerServerId(closestPlayer))
-
-        Citizen.Wait(100)
-        
-        lib.registerContext({
-          id = 'cardealer_main_menu',
-          title = Config.Menus.mainmenu.title,
-          options = {
-            {
-                title = Config.Menus.mainmenu.testcars.title,
-                icon = Config.Menus.mainmenu.testcars.icon,
-                onSelect = function ()
-                    TestDriveMenu(jobName, testcarcoords, testcarheading)
-                end,
-            },
-            {
-              title = Config.Menus.mainmenu.sellcars.title,
-              description = Config.Menus.mainmenu.sellcars.description,
-              icon = Config.Menus.mainmenu.sellcars.icon,
-              onSelect = function()
-                OpenSellMenu(jobName, spawncoords, spawnheading)
-              end,
-              metadata = {
-                {label = Config.Menus.mainmenu.sellcars.metadata, value = playerName},
-              },
-            },
-            {
-                title = Config.Menus.mainmenu.stock.title,
-                description = (Config.Menus.mainmenu.stock.description):format(name),
-                icon = Config.Menus.mainmenu.stock.icon,
-                metadata = {
-                    {label = (Config.Menus.mainmenu.stock.metadata):format(name), value = SplitNumber(stockWorth).." DKK"},
-                  },
-                onSelect = function()
-                    OpenStock(jobName)
-                end
-            },
-            {
-                title = Config.Menus.mainmenu.buystock.title,
-                description = (Config.Menus.mainmenu.buystock.description):format(name),
-                icon = Config.Menus.mainmenu.buystock.icon,
-                onSelect = function()
-                    if ESX.PlayerData.job.grade >= Config.AllowedToBuyStock then
-                        BuyStock(jobName, category)
-                    else
-                        lib.notify({
-                            title = Locales[Lang].notifications.title,
-                            description = Locales[Lang].notifications.notAllowed,
-                            type = "error"
-                        })
-                    end
-                end
-            },
-            {
-                title = Config.Menus.mainmenu.editprices.title,
-                description = (Config.Menus.mainmenu.editprices.description):format(name),
-                icon = Config.Menus.mainmenu.editprices.icon,
-                onSelect = function()
-                    ChangePrices(jobName)
-                end
-            },
-          }
-        })
-            lib.showContext('cardealer_main_menu')
+    else
+        OpenDealerMenuFinal(name, jobName, category, spawncoords, spawnheading, testcarcoords, testcarheading, playerName, stockWorth)
     end
+end
+
+function OpenDealerMenuFinal(name, jobName, category, spawncoords, spawnheading, testcarcoords, testcarheading, playerName, stockWorth)
+    lib.registerContext({
+        id = 'cardealer_main_menu',
+        title = Config.Menus.mainmenu.title,
+        options = {
+          {
+              title = Config.Menus.mainmenu.testcars.title,
+              icon = Config.Menus.mainmenu.testcars.icon,
+              onSelect = function ()
+                  TestDriveMenu(jobName, testcarcoords, testcarheading)
+              end,
+          },
+          {
+            title = Config.Menus.mainmenu.sellcars.title,
+            description = Config.Menus.mainmenu.sellcars.description,
+            icon = Config.Menus.mainmenu.sellcars.icon,
+            onSelect = function()
+              OpenSellMenu(jobName, spawncoords, spawnheading)
+            end,
+            metadata = {
+              {label = Config.Menus.mainmenu.sellcars.metadata, value = playerName},
+            },
+          },
+          {
+              title = Config.Menus.mainmenu.stock.title,
+              description = (Config.Menus.mainmenu.stock.description):format(name),
+              icon = Config.Menus.mainmenu.stock.icon,
+              metadata = {
+                  {label = (Config.Menus.mainmenu.stock.metadata):format(name), value = SplitNumber(stockWorth).." DKK"},
+                },
+              onSelect = function()
+                  OpenStock(jobName)
+              end
+          },
+          {
+              title = Config.Menus.mainmenu.buystock.title,
+              description = (Config.Menus.mainmenu.buystock.description):format(name),
+              icon = Config.Menus.mainmenu.buystock.icon,
+              onSelect = function()
+                  if ESX.PlayerData.job.grade >= Config.AllowedToBuyStock then
+                      BuyStock(jobName, category)
+                  else
+                      lib.notify({
+                          title = Locales[Lang].notifications.title,
+                          description = Locales[Lang].notifications.notAllowed,
+                          type = "error"
+                      })
+                  end
+              end
+          },
+          {
+              title = Config.Menus.mainmenu.editprices.title,
+              description = (Config.Menus.mainmenu.editprices.description):format(name),
+              icon = Config.Menus.mainmenu.editprices.icon,
+              onSelect = function()
+                  ChangePrices(jobName)
+              end
+          },
+        }
+      })
+          lib.showContext('cardealer_main_menu')
 end
 
 function ChangePrices(company)

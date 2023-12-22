@@ -1,5 +1,22 @@
 Lang = Config.Language
 
+function SplitNumber(n)
+    local sign = n < 0 and "-" or ""
+    local integerPart, decimalPart = math.modf(math.abs(n))
+    local formattedNumber = tostring(integerPart):reverse():gsub("(%d%d%d)","%1."):reverse()
+
+    if decimalPart ~= 0 then
+        formattedNumber = formattedNumber .. "." .. string.format("%03d", math.abs(decimalPart * 1000))
+    end
+
+    -- Check if the first character is a dot, and remove it if present
+    if formattedNumber:sub(1, 1) == "." then
+        formattedNumber = formattedNumber:sub(2)
+    end
+
+    return sign .. formattedNumber
+end
+
 for _, v in pairs(Config.Dealerships) do
     TriggerEvent('esx_society:registerSociety', v.jobName, v.CompanyLabel, 'society_'..v.jobName, 'society_'..v.jobName, 'society_'..v.jobName, {type = 'public'})
 
@@ -180,7 +197,7 @@ AddEventHandler("give:car:to:player", function (plate, player, mods, car, compan
     local Cardealer = ESX.GetPlayerFromId(cardealer)
     
     Cardealer.addAccountMoney('bank', (carprice / 100 * Config.SalesRewardPercent))
-    TriggerClientEvent("notify:client", cardealer, Locales[Lang].notifications.title, ("Du modtog %s DKK for at sælge køretøjet"):format(carprice / 100 * Config.SalesRewardPercent), "success")
+    TriggerClientEvent("notify:client", cardealer, Locales[Lang].notifications.title, ("Du modtog %s DKK for at sælge køretøjet"):format(SplitNumber(carprice / 100 * Config.SalesRewardPercent)), "success")
 
     Owner.removeAccountMoney('bank', carprice)
     TriggerClientEvent("notify:client", player, Locales[Lang].notifications.title, Locales[Lang].notifications.congratPlayer, "success")
