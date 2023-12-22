@@ -26,7 +26,7 @@ Config.Dealerships = {
             size = 0.9,
         },
 
-        Category = "cars", -- Either 'all' for all category's. 'cars' for only cars. 'bike' for only bikes. 'boats' for only boats
+        Category = "cars", -- Either 'all' for all category's. 'cars' for only cars. 'bikes' for only bikes. 'boats' for only boats
         
         Bossmenu = vector3(-806.4951, -204.8651, 41.6335),
         BoughtVehicleSpawnPos = vector3(-774.5132, -229.9516, 36.9975),
@@ -63,7 +63,7 @@ Config.Dealerships = {
             size = 0.9,
         },
 
-        Category = "cars", -- Either 'all' for all category's. 'cars' for only cars. 'bike' for only bikes. 'boats' for only boats
+        Category = "cars", -- Either 'all' for all category's. 'cars' for only cars. 'bikes' for only bikes. 'boats' for only boats
         
         Bossmenu = vector3(-32.3454,-1115.0773,26.4223),
         BoughtVehicleSpawnPos = vector3(-31.1693,-1090.6241,26.4222),
