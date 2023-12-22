@@ -8,6 +8,7 @@ helt igennem så fejl kan godt forekomme.
 - ox_target
 - ox_lib
 - esx_society
+- esx_garage
 
 ### Setup
 1. Start med at impoter db.sql ind i jeres database (I kan selv oprette og fjerne biler i pede-vehicles)
