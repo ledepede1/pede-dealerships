@@ -1,9 +1,5 @@
 Lang = Config.Language
 
-RegisterCommand("test", function ()
-    TriggerServerEvent("pede:buyStock", "police", "adder", 1)
-end, false)
-
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
     ESX.PlayerData = xPlayer
