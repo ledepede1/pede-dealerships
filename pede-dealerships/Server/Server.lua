@@ -1,22 +1,26 @@
+-- Making global variable to use Lang from Config to locale files.
 Lang = Config.Language
 
-function SplitNumber(n)
-    local sign = n < 0 and "-" or ""
-    local integerPart, decimalPart = math.modf(math.abs(n))
-    local formattedNumber = tostring(integerPart):reverse():gsub("(%d%d%d)","%1."):reverse()
-
-    if decimalPart ~= 0 then
-        formattedNumber = formattedNumber .. "." .. string.format("%03d", math.abs(decimalPart * 1000))
+-- Function to check if the players job is in one of the dealerships jobs
+function CheckIfPlayerIsAllowed(player)
+    if player == nil then
+    player = source
     end
 
-    -- Check if the first character is a dot, and remove it if present
-    if formattedNumber:sub(1, 1) == "." then
-        formattedNumber = formattedNumber:sub(2)
+    local xPlayer = ESX.GetPlayerFromId(player)
+    local hasJob = false
+
+    for _, v in pairs(Config.Dealerships) do
+        if v.jobName ==  xPlayer.job.name then
+                hasJob = true
+            break
+        end
     end
 
-    return sign .. formattedNumber
+    return hasJob
 end
 
+-- Checking if the society in the Config is already existing if not then it will create it.
 for _, v in pairs(Config.Dealerships) do
     TriggerEvent('esx_society:registerSociety', v.jobName, v.CompanyLabel, 'society_'..v.jobName, 'society_'..v.jobName, 'society_'..v.jobName, {type = 'public'})
 
@@ -34,155 +38,201 @@ for _, v in pairs(Config.Dealerships) do
     end
 end
 
--- Callbacks
-ESX.RegisterServerCallback('pede:getPlayerName', function(source, cb, player)
-    local playerName
+-- Divide number into thousand 1.000.000
+function SplitNumber(n)
+    local sign = n < 0 and "-" or ""
+    local integerPart, decimalPart = math.modf(math.abs(n))
+    local formattedNumber = tostring(integerPart):reverse():gsub("(%d%d%d)","%1."):reverse()
 
-    if player == nil then
-        playerName = Locales[Lang].noPlayersNearby
-    else
-        local xPlayer = ESX.GetPlayerFromId(player)
-        playerName = xPlayer.getName()
+    if decimalPart ~= 0 then
+        formattedNumber = formattedNumber .. "." .. string.format("%03d", math.abs(decimalPart * 1000))
     end
-		
-	cb(playerName)
+
+    -- Check if the first character is a dot, and remove it if present
+    if formattedNumber:sub(1, 1) == "." then
+        formattedNumber = formattedNumber:sub(2)
+    end
+
+    return sign .. formattedNumber
+end
+
+-- Callbacks
+
+-- Callback to get given players fist and lastname.
+ESX.RegisterServerCallback('pede:getPlayerName', function(source, cb, player)
+    if CheckIfPlayerIsAllowed(source) then 
+        local playerName
+
+        if player == nil then
+            playerName = Locales[Lang].noPlayersNearby
+        else
+            local xPlayer = ESX.GetPlayerFromId(player)
+            playerName = xPlayer.getName()
+        end
+            
+        cb(playerName)
+    end
 end)
 
+-- Callback to get the nearest players money.
 ESX.RegisterServerCallback('pede:getPlayerMoney', function(source, cb, player)
-	local xPlayer = ESX.GetPlayerFromId(player)
-    local playerMoney = xPlayer.getAccount('bank')
-		
-	cb(playerMoney)
+    if CheckIfPlayerIsAllowed(source) then 
+        local xPlayer = ESX.GetPlayerFromId(player)
+        local playerMoney = xPlayer.getAccount('bank')
+            
+        cb(playerMoney)
+    end
 end)
 
+-- Callback to check if the plate already exist.
 ESX.RegisterServerCallback('pede:getNumberPlate', function(source, cb, numberplate)
-	local numberPlate = MySQL.query.await('SELECT plate FROM `owned_vehicles` WHERE plate=?', {
-        numberplate
-    })
+    if CheckIfPlayerIsAllowed(source) then 
+        local numberPlate = MySQL.query.await('SELECT plate FROM `owned_vehicles` WHERE plate=?', {
+            numberplate
+        })
 
-	cb(numberPlate)
+        cb(numberPlate)
+    end
 end)
 
+-- Get the given companys stock of vehicles.
 ESX.RegisterServerCallback('pede:getStock', function(source, cb, name)
-	local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=?', {
-        name
-    })
+    if CheckIfPlayerIsAllowed(source) then 
+        local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=?', {
+            name
+        })
 
-	cb(stockCars)
+        cb(stockCars)
+    end
 end)
 
+-- Get the cars price from the individual company.
 ESX.RegisterServerCallback('pede:getCarStockPrice', function(source, cb, name, modelname)
-	local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=? AND modelname=?', {
-        name,
-        modelname
-    })
+    if CheckIfPlayerIsAllowed(source) then 
+        local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=? AND modelname=?', {
+            name,
+            modelname
+        })
 
-	cb(stockCars)
+        cb(stockCars)
+    end
 end)
 
 ESX.RegisterServerCallback('pede:changePrices:minprice', function(source, cb, name)
-	local minBuyPrice = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
-        name
-    })
-    local minPrice = minBuyPrice[1].buyprice
+    if CheckIfPlayerIsAllowed(source) then 
+        local minBuyPrice = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
+            name
+        })
+        local minPrice = minBuyPrice[1].buyprice
 
-	cb(minPrice)
+        cb(minPrice)
+    end
 end)
 
 ESX.RegisterServerCallback('pede:getBuyPrice', function(source, cb, name)
-	local buyPrice = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
-        name
-    })
-    local price = buyPrice[1]
+    if CheckIfPlayerIsAllowed(source) then 
+        local buyPrice = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
+            name
+        })
+        local price = buyPrice[1]
 
-    local stock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
-        name
-    })
-    local stock = stock[1]
+        local stock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
+            name
+        })
+        local stock = stock[1]
 
-	cb(price, stock)
+        cb(price, stock)
+    end
 end)
 
 ESX.RegisterServerCallback('pede:getStockWorth', function(source, cb, name)
-    local worth = 0
-	local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=?', {
-        name
-    })
-    for k, v in pairs(stockCars) do
-        worth = worth + v.minprice * tonumber(v.stock)
+    if CheckIfPlayerIsAllowed(source) then 
+        local worth = 0
+        local stockCars = MySQL.query.await('SELECT * FROM `pede-stock` WHERE company=?', {
+            name
+        })
+        for k, v in pairs(stockCars) do
+            worth = worth + v.minprice * tonumber(v.stock)
+        end
+        cb(worth)
     end
-	cb(worth)
 end)
 
 ESX.RegisterServerCallback('pede:getBuyableStock', function(source, cb, category)
-    local stockCars
-    if category == "all" then
-        stockCars = MySQL.query.await('SELECT * FROM `pede-vehicles`')
-    else
-        stockCars = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE companycategory=?', {
-            category
-        })
-    end
+    if CheckIfPlayerIsAllowed(source) then 
+        local stockCars
+        if category == "all" then
+            stockCars = MySQL.query.await('SELECT * FROM `pede-vehicles`')
+        else
+            stockCars = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE companycategory=?', {
+                category
+            })
+        end
 
-	cb(stockCars)
+        cb(stockCars)
+    end
 end)
 
 -- Events
 
 RegisterNetEvent("pede:buyStock")
-AddEventHandler("pede:buyStock", function(companyName, car, amount)
+AddEventHandler("pede:buyStock", function(companyName, car, amount) -- Company is actualy just the jobname but companyName sounds nicer
     local source = source
     local Player = ESX.GetPlayerFromId(source)
 
-    local getSocietyMoney = MySQL.query.await('SELECT money FROM `addon_account_data` WHERE account_name=?', {
-        'society_'..companyName
-    })
+    if CheckIfPlayerIsAllowed(source) then 
+        local getSocietyMoney = MySQL.query.await('SELECT money FROM `addon_account_data` WHERE account_name=?', {
+            'society_'..companyName
+        })
 
-	local getCarData = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
-        car
-    })
-
-    local minsellprice = tonumber(getCarData[1].buyprice) / 100 * Config.MinSellPercent
-    local currentStock = 1
-
-    if tonumber(getSocietyMoney[1].money) >= tonumber(getCarData[1].buyprice)*amount then
-    MySQL.query.await('UPDATE `addon_account_data` SET money=? WHERE account_name=?', {
-        tonumber(getSocietyMoney[1].money)-tonumber(getCarData[1].buyprice)*amount,
-        'society_'..companyName
-    })
-
-    local getCarDataStock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
-        car
-    })
-
-    if getCarDataStock and #getCarDataStock >= 0 and getCarDataStock[1] ~= nil and getCarDataStock ~= nil then
-    if tonumber(getCarDataStock[1].stock) >= 1 then
-        currentStock = tonumber(getCarDataStock[1].stock) + amount
-        MySQL.query.await('UPDATE `pede-stock` SET company=?, modelname=?, label=?, minprice=?, stock=? WHERE modelname=?', {
-            companyName,
-            car,
-            getCarData[1].label,
-            getCarData[1].buyprice + minsellprice,
-            currentStock,
+        local getCarData = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
             car
         })
-    end
-    else
-        MySQL.query.await('INSERT INTO `pede-stock` (company, modelname, label, minprice, stock) VALUES (?, ?, ?, ?, ?)', {
-            companyName,
-            car,
-            getCarData[1].label,
-            getCarData[1].buyprice + minsellprice,
-            currentStock * amount
-        })
-    end
-    TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,string.format(Locales[Lang].notifications.boughtStock, amount, getCarData[1].label, tonumber(getCarData[1].buyprice)*amount), "success")
-    Log(string.format("Name: %s ID: %s \nkøbte lige %sx %s til %s \nJobname: %s \nGrade: %s", Player.getName(), source, amount, car, companyName, Player.job.name, Player.job.grade_name))
 
-    getCarData = nil
-    getCarDataStock = nil
-else
-    TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,Locales[Lang].notifications.notEnoughSocietyMoney, "error")
+        local minsellprice = tonumber(getCarData[1].buyprice) / 100 * Config.MinSellPercent
+        local currentStock = 1
+
+        if tonumber(getSocietyMoney[1].money) >= tonumber(getCarData[1].buyprice)*amount then
+        MySQL.query.await('UPDATE `addon_account_data` SET money=? WHERE account_name=?', {
+            tonumber(getSocietyMoney[1].money)-tonumber(getCarData[1].buyprice)*amount,
+            'society_'..companyName
+        })
+
+        local getCarDataStock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
+            car
+        })
+
+        if getCarDataStock and #getCarDataStock >= 0 and getCarDataStock[1] ~= nil and getCarDataStock ~= nil then
+        if tonumber(getCarDataStock[1].stock) >= 1 then
+            currentStock = tonumber(getCarDataStock[1].stock) + amount
+            MySQL.query.await('UPDATE `pede-stock` SET company=?, modelname=?, label=?, minprice=?, stock=? WHERE modelname=?', {
+                companyName,
+                car,
+                getCarData[1].label,
+                getCarData[1].buyprice + minsellprice,
+                currentStock,
+                car
+            })
+        end
+        else
+            MySQL.query.await('INSERT INTO `pede-stock` (company, modelname, label, minprice, stock) VALUES (?, ?, ?, ?, ?)', {
+                companyName,
+                car,
+                getCarData[1].label,
+                getCarData[1].buyprice + minsellprice,
+                currentStock * amount
+            })
+        end
+        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,string.format(Locales[Lang].notifications.boughtStock, amount, getCarData[1].label, tonumber(getCarData[1].buyprice)*amount), "success")
+        Log(string.format("Name: %s ID: %s \nkøbte lige %sx %s til %s \nJobname: %s \nGrade: %s", Player.getName(), source, amount, car, companyName, Player.job.name, Player.job.grade_name))
+
+        getCarData = nil
+        getCarDataStock = nil
+    else
+        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,Locales[Lang].notifications.notEnoughSocietyMoney, "error")
+        end
+    else
+        DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
     end
 end)
 
@@ -195,7 +245,9 @@ RegisterNetEvent("give:car:to:player")
 AddEventHandler("give:car:to:player", function (plate, player, mods, car, company, carprice, cardealer)
     local Owner = ESX.GetPlayerFromId(player)
     local Cardealer = ESX.GetPlayerFromId(cardealer)
+
     
+    if CheckIfPlayerIsAllowed(cardealer) then 
     Cardealer.addAccountMoney('bank', (carprice / 100 * Config.SalesRewardPercent))
     TriggerClientEvent("notify:client", cardealer, Locales[Lang].notifications.title, ("Du modtog %s DKK for at sælge køretøjet"):format(SplitNumber(carprice / 100 * Config.SalesRewardPercent)), "success")
 
@@ -232,20 +284,33 @@ AddEventHandler("give:car:to:player", function (plate, player, mods, car, compan
         })
     end
 
-    Log(string.format("# Vehicle sold \nModelname: %s \nPrice: %s \n Recipient: %s ID: %s \nSeller: %s ID: %s", car, carprice, Owner.getName(), player, Cardealer.getName(), cardealer))
+        Log(string.format("# Vehicle sold \nModelname: %s \nPrice: %s \n Recipient: %s ID: %s \nSeller: %s ID: %s", car, carprice, Owner.getName(), player, Cardealer.getName(), cardealer))
+    else
+        DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
+    end
 end)
 
 RegisterNetEvent("change:car:price")
 AddEventHandler("change:car:price", function (car, company, price)
-    MySQL.query.await('UPDATE `pede-stock` SET minprice=? WHERE modelname=? AND company=?', {
-        price,
-        car,
-        company
-    })
+    local source = source
+
+    if CheckIfPlayerIsAllowed(source) then 
+        MySQL.query.await('UPDATE `pede-stock` SET minprice=? WHERE modelname=? AND company=?', {
+            price,
+            car,
+            company
+        })
+        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title, string.format("Du ændrede prisen på %s \n til %s DKK", car, price), "success")
+    else
+        DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
+    end
 end)
 
 RegisterNetEvent("send:car:retur")
 AddEventHandler("send:car:retur", function (car, company, money, amount)
+    local source = source
+
+    if CheckIfPlayerIsAllowed(source) then 
     local getCarDataStock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
         car
     })
@@ -266,7 +331,10 @@ AddEventHandler("send:car:retur", function (car, company, money, amount)
 
     TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..company, function(account)
         account.addMoney(money)
-    end)
+        end)
+    else
+        DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
+    end
 end)
 
 
