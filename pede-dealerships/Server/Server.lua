@@ -180,57 +180,53 @@ AddEventHandler("pede:buyStock", function(companyName, car, amount) -- Company i
     local source = source
     local Player = ESX.GetPlayerFromId(source)
 
-    if CheckIfPlayerIsAllowed(source) then 
-        local getSocietyMoney = MySQL.query.await('SELECT money FROM `addon_account_data` WHERE account_name=?', {
-            'society_'..companyName
-        })
-
+    if CheckIfPlayerIsAllowed(source) then
         local getCarData = MySQL.query.await('SELECT * FROM `pede-vehicles` WHERE modelname=?', {
             car
         })
 
-        local minsellprice = tonumber(getCarData[1].buyprice) / 100 * Config.MinSellPercent
-        local currentStock = 1
+        TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..companyName, function(account)
+            if account.money > tonumber(getCarData[1].buyprice)*amount then
+                account.removeMoney(tonumber(getCarData[1].buyprice)*amount)
 
-        if tonumber(getSocietyMoney[1].money) >= tonumber(getCarData[1].buyprice)*amount then
-        MySQL.query.await('UPDATE `addon_account_data` SET money=? WHERE account_name=?', {
-            tonumber(getSocietyMoney[1].money)-tonumber(getCarData[1].buyprice)*amount,
-            'society_'..companyName
-        })
-
-        local getCarDataStock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
-            car
-        })
-
-        if getCarDataStock and #getCarDataStock >= 0 and getCarDataStock[1] ~= nil and getCarDataStock ~= nil then
-        if tonumber(getCarDataStock[1].stock) >= 1 then
-            currentStock = tonumber(getCarDataStock[1].stock) + amount
-            MySQL.query.await('UPDATE `pede-stock` SET company=?, modelname=?, label=?, minprice=?, stock=? WHERE modelname=?', {
-                companyName,
-                car,
-                getCarData[1].label,
-                getCarData[1].buyprice + minsellprice,
-                currentStock,
-                car
-            })
-        end
-        else
-            MySQL.query.await('INSERT INTO `pede-stock` (company, modelname, label, minprice, stock) VALUES (?, ?, ?, ?, ?)', {
-                companyName,
-                car,
-                getCarData[1].label,
-                getCarData[1].buyprice + minsellprice,
-                currentStock * amount
-            })
-        end
-        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,string.format(Locales[Lang].notifications.boughtStock, amount, getCarData[1].label, tonumber(getCarData[1].buyprice)*amount), "success")
-        Log(string.format("Name: %s ID: %s \nkøbte lige %sx %s til %s \nJobname: %s \nGrade: %s", Player.getName(), source, amount, car, companyName, Player.job.name, Player.job.grade_name))
-
-        getCarData = nil
-        getCarDataStock = nil
-    else
-        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title,Locales[Lang].notifications.notEnoughSocietyMoney, "error")
-        end
+                local minsellprice = tonumber(getCarData[1].buyprice) / 100 * Config.MinSellPercent
+                local currentStock = 1
+        
+        
+                local getCarDataStock = MySQL.query.await('SELECT * FROM `pede-stock` WHERE modelname=?', {
+                    car
+                })
+        
+                if getCarDataStock and #getCarDataStock >= 0 and getCarDataStock[1] ~= nil and getCarDataStock ~= nil then
+                if tonumber(getCarDataStock[1].stock) >= 1 then
+                    currentStock = tonumber(getCarDataStock[1].stock) + amount
+                    MySQL.query.await('UPDATE `pede-stock` SET company=?, modelname=?, label=?, minprice=?, stock=? WHERE modelname=?', {
+                        companyName,
+                        car,
+                        getCarData[1].label,
+                        getCarData[1].buyprice + minsellprice,
+                        currentStock,
+                        car
+                    })
+                end
+                else
+                    MySQL.query.await('INSERT INTO `pede-stock` (company, modelname, label, minprice, stock) VALUES (?, ?, ?, ?, ?)', {
+                        companyName,
+                        car,
+                        getCarData[1].label,
+                        getCarData[1].buyprice + minsellprice,
+                        currentStock * amount
+                    })
+                end
+                TriggerClientEvent("pededealerships:notify:client", source, Locales[Lang].notifications.title,string.format(Locales[Lang].notifications.boughtStock, amount, getCarData[1].label, tonumber(getCarData[1].buyprice)*amount), "success")
+                Log(string.format("Name: %s ID: %s \nkøbte lige %sx %s til %s \nJobname: %s \nGrade: %s", Player.getName(), source, amount, car, companyName, Player.job.name, Player.job.grade_name))
+        
+                getCarData = nil
+                getCarDataStock = nil
+            else
+                TriggerClientEvent("pededealerships:notify:client", source, Locales[Lang].notifications.title,Locales[Lang].notifications.notEnoughSocietyMoney, "error")
+            end
+        end)
     else
         DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
     end
@@ -249,10 +245,10 @@ AddEventHandler("give:car:to:player", function (plate, player, mods, car, compan
     
     if CheckIfPlayerIsAllowed(cardealer) then 
     Cardealer.addAccountMoney('bank', (carprice / 100 * Config.SalesRewardPercent))
-    TriggerClientEvent("notify:client", cardealer, Locales[Lang].notifications.title, ("Du modtog %s DKK for at sælge køretøjet"):format(SplitNumber(carprice / 100 * Config.SalesRewardPercent)), "success")
+    TriggerClientEvent("pededealerships:notify:client", cardealer, Locales[Lang].notifications.title, ("Du modtog %s DKK for at sælge køretøjet"):format(SplitNumber(carprice / 100 * Config.SalesRewardPercent)), "success")
 
     Owner.removeAccountMoney('bank', carprice)
-    TriggerClientEvent("notify:client", player, Locales[Lang].notifications.title, Locales[Lang].notifications.congratPlayer, "success")
+    TriggerClientEvent("pededealerships:notify:client", player, Locales[Lang].notifications.title, Locales[Lang].notifications.congratPlayer, "success")
 
     TriggerEvent('esx_addonaccount:getSharedAccount', 'society_'..company, function(account)
         local amount = carprice * (1 - Config.SalesRewardPercent / 100) 
@@ -300,7 +296,7 @@ AddEventHandler("change:car:price", function (car, company, price)
             car,
             company
         })
-        TriggerClientEvent("notify:client", source, Locales[Lang].notifications.title, string.format("Du ændrede prisen på %s \n til %s DKK", car, price), "success")
+        TriggerClientEvent("pededealerships:notify:client", source, Locales[Lang].notifications.title, string.format("Du ændrede prisen på %s \n til %s DKK", car, price), "success")
     else
         DropPlayer(source, "Prøvede at exploite: "..GetCurrentResourceName())
     end

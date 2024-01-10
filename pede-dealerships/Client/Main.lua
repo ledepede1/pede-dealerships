@@ -12,7 +12,7 @@ end)
 
 
 Citizen.CreateThread(function()
-    for dealershipName, dealershipInfo in pairs(Config.Dealerships) do
+    for _, dealershipInfo in pairs(Config.Dealerships) do
         local blip = AddBlipForCoord(dealershipInfo.MenuTargets[1].x, dealershipInfo.MenuTargets[1].y, dealershipInfo.MenuTargets[1].z)
 
         
@@ -44,8 +44,8 @@ AddEventHandler("send:accept:dialog:to:player:client", function(carname, numberp
     end
 end)
 
-RegisterNetEvent("notify:client")
-AddEventHandler("notify:client", function(title, desc, type)
+RegisterNetEvent("pededealerships:notify:client")
+AddEventHandler("pededealerships:notify:client", function(title, desc, type)
     lib.notify({
         title = title,
         description = desc,

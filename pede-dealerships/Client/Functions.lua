@@ -139,3 +139,8 @@ function SpawnCatalogVehicle(modelname)
         FreezeEntityPosition(vehicle, true)
     end)
 end
+
+function OpenBossMenu(jobname)
+    TriggerEvent('esx_society:openBossMenu', jobname, function()
+    end, {wash = false})
+end

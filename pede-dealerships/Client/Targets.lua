@@ -52,7 +52,7 @@ for _, v in pairs(Config.Dealerships) do
             {
                 name = 'boss_menu:'..v.jobName,
                 onSelect = function ()
-                    TriggerEvent('esx_society:openBossMenu', v.jobName, function (data, menu) end, {wash = false})
+                    OpenBossMenu(v.jobName)
                 end,
                 icon = 'fa-solid fa-paperclip',
                 label = (Locales[Lang].targets.openBossmenu):format(v.CompanyLabel),
